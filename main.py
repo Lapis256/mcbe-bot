@@ -1,6 +1,5 @@
 from os import environ
 
-from uvloop import new_event_loop
 from dotenv import load_dotenv
 from discord.ext.utils import get_extensions
 
