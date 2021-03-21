@@ -1,11 +1,14 @@
 from io import StringIO
-from typing import Union
+from typing import Union, Optional
 
 
 from more_itertools import ichunked
+from nbtlib import CastError
 from discord.ext import commands
 import discord
 
+from .utils.structure import EntityStructureFile, ItemEntityStructureFile
+from .utils.structure_schema import Item, Entity
 from .utils.title import gen_title, is_valid_type
 from .utils.flat import (
     get_block,
@@ -79,6 +82,63 @@ class MinecraftBE(commands.Cog):
         await ctx.send(
             f"ワールド名: {levelname}\nバイオーム: {biome}\n{blocks_text}",
             file=discord.File(mcworld, filename="FlatWorld.mcworld")
+        )
+
+    @commands.group(invoke_without_command=True)
+    async def structure(self, ctx):
+        """ストラクチャーファイルを生成するコマンドです。"""
+        await ctx.send("サブコマンドを指定してください。")
+
+    @structure.command()
+    async def item(self, ctx, file_name, identifier, damage: int = 0, count: int = 1,
+                   unbreakable: bool = False, name: Optional[str] = None,
+                   lore: Optional[str] = None):
+
+        """特殊なアイテムが保存されたストラクチャーを生成します。"""
+
+        item_buff = ItemEntityStructureFile.create_file(Item.create_item(
+            identifier, damage, count, unbreakable, name, lore
+        ))
+
+        await ctx.send(
+            file=discord.File(item_buff, filename=file_name + ".mcstructure")
+        )
+
+    @structure.command()
+    async def tagitem(self, ctx, file_name, identifier, damage: int = 0, count: int = 1,
+                      *, tag: str = "{}"):
+
+        """特殊なアイテムが保存されたストラクチャーを生成します。
+        tag引数を使うことで複雑なアイテムを指定することができます。
+        minecraftのNBTに関する知識が必要です。"""
+
+        try:
+            item_buff = ItemEntityStructureFile.create_file_with_tag(Item.create_item(
+                identifier, damage, count), tag)
+        except CastError as e:
+            await ctx.send(f"tag変数が間違っています。\n```\n{e}```")
+            return
+
+        await ctx.send(
+            file=discord.File(item_buff, filename=file_name + ".mcstructure")
+        )
+
+    @structure.command()
+    async def entity(self, ctx, file_name, identifier, *, nbt: str = "{}") -> None:
+        """エンティティを含むストラクチャーを生成します。
+        nbt引数を使用する事でエンティティのnbtを変更することができます。
+        """
+
+        try:
+            entity_buff = EntityStructureFile.create_file_with_tag(
+                Entity([0.5, 0.0, 0.5], identifier), nbt
+            )
+        except CastError as e:
+            await ctx.send(f"nbt変数が間違っています。\n```\n{e}```")
+            return
+
+        await ctx.send(
+            file=discord.File(entity_buff, filename=file_name + ".mcstructure")
         )
 
 
