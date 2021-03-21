@@ -24,24 +24,28 @@ def get_render_url(uuid):
     return BODY_RENDER + uuid
 
 
-async def fetch_uuid(name):
-    url = BASE_URL + name
+async def get_request(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
-            if response.status != 200:
-                raise NotFoundUser
-            return (await response.json())["id"]
+            return (response.status, await response.json())
+
+
+async def fetch_uuid(name):
+    url = BASE_URL + name
+    status, response = await get_request(url)
+    if status != 200:
+        raise NotFoundUser
+
+    return response["id"]
 
 
 async def fetch_skin_url(uuid):
     url = SKIN_URL + uuid
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                raise NotFoundUser
-            response_json = await response.json()
+    status, response = await get_request(url)
+    if status != 200:
+        raise NotFoundUser
 
-    decoded = b64decode(response_json["properties"][0]["value"])
+    decoded = b64decode(response["properties"][0]["value"])
     decoded_json = json.loads(decoded)
 
     return decoded_json["textures"]["SKIN"]["url"]
