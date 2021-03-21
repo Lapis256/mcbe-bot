@@ -53,7 +53,7 @@ class MinecraftBE(commands.Cog):
         バイオームIDはwiki等を参照してください。
         https://minecraft.gamepedia.com/Biome#Biome_IDs
         サンプル
-        .flat testflat-world plains bedrock:0 1 dirt 2 grass 3
+        .flat testflat-world plains bedrock:0 1 dirt 2 grass 1
         """
 
         if len(blocks) % 2 > 0:
